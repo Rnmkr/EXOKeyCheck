@@ -89,7 +89,8 @@ namespace EXOKeyCheck
 
         private static void ExecuteHashQuery(int reportID)
         {
-            var connectionString = @"data source=VM-FORREST;initial catalog=EXOOAKeys2020;persist security info=True;user id=BUBBASQL;password=12345678;MultipleActiveResultSets=True";
+            var connectionString = @"data source=BUBBA;initial catalog=Produccion;persist security info=True;user id=BUBBASQL;password=12345678;MultipleActiveResultSets=True;";
+            //var connectionString = @"data source=VM-FORREST;initial catalog=EXOOAKeys2020;persist security info=True;user id=BUBBASQL;password=12345678;MultipleActiveResultSets=True";
             //var connectionString = @"data source=DESKTOP;initial catalog=EXOOAKeys2020; integrated security=True; MultipleActiveResultSets=True";
             var sqlConnection = new SqlConnection(connectionString);
 
@@ -124,7 +125,8 @@ namespace EXOKeyCheck
 
         private static OAKeyReport ExecuteSelectFromKeyQuery(string key, string storedprocedure)
         {
-            var connectionString = @"data source=VM-FORREST;initial catalog=EXOOAKeys2020;persist security info=True;user id=BUBBASQL;password=12345678;MultipleActiveResultSets=True";
+            var connectionString = @"data source=BUBBA;initial catalog=Produccion;persist security info=True;user id=BUBBASQL;password=12345678;MultipleActiveResultSets=True;";
+            //var connectionString = @"data source=VM-FORREST;initial catalog=EXOOAKeys2020;persist security info=True;user id=BUBBASQL;password=12345678;MultipleActiveResultSets=True";
             //var connectionString = @"data source=DESKTOP;initial catalog=EXOOAKeys2020; integrated security=True; MultipleActiveResultSets=True";
             var sqlConnection = new SqlConnection(connectionString);
             using (sqlConnection)
@@ -175,7 +177,8 @@ namespace EXOKeyCheck
 
         private static void ExecuteSaveQuery(string key, string serialNumber)
         {
-            var connectionString = @"data source=VM-FORREST;initial catalog=EXOOAKeys2020;persist security info=True;user id=BUBBASQL;password=12345678;MultipleActiveResultSets=True";
+            var connectionString = @"data source=BUBBA;initial catalog=Produccion;persist security info=True;user id=BUBBASQL;password=12345678;MultipleActiveResultSets=True;";
+            //var connectionString = @"data source=VM-FORREST;initial catalog=EXOOAKeys2020;persist security info=True;user id=BUBBASQL;password=12345678;MultipleActiveResultSets=True";
             //var connectionString = @"data source=DESKTOP;initial catalog=EXOOAKeys2020; integrated security=True; MultipleActiveResultSets=True";
             var sqlConnection = new SqlConnection(connectionString);
             using (sqlConnection)
@@ -218,13 +221,14 @@ namespace EXOKeyCheck
             Console.WriteLine(" Códigos de salida:");
             Console.WriteLine("");
             Console.WriteLine("      0 = OK");
-            Console.WriteLine("     -1 = ERROR en aplicacion.");
-            Console.WriteLine("     -2 = CLAVE existente en base de datos.");
+            Console.WriteLine("     -1 = ERROR en aplicación.");
+            Console.WriteLine("     -2 = OA KEY existente en base de datos.");
             Console.WriteLine("     -3 = SERIAL NUMBER existente en base de datos.");
-            Console.WriteLine("     -4 = CLAVE no coincide con SERIAL NUMBER en base de datos.");
-            Console.WriteLine("     -5 = CLAVE Y SERIAL NUMBER existentes en base de datos.");
-            Console.WriteLine("     -6 = CLAVE inexistente en base de datos");
+            Console.WriteLine("     -4 = OA KEY no coincide con SERIAL NUMBER en base de datos.");
+            Console.WriteLine("     -5 = OA KEY y SERIAL NUMBER existentes en base de datos.");
+            Console.WriteLine("     -6 = OA KEY inexistente en base de datos");
             Console.WriteLine("     -7 = SERIAL NUMBER inexistente en base de datos");
+            Console.WriteLine("     -13 = OA KEY y SERIAL NUMBER inexistentes en base de datos");
 
             Environment.Exit(0);
         }
