@@ -10,6 +10,7 @@ namespace EXOKeyCheck
     {
 
         private int _reportID;
+        private string _productKeyCode;
         private string _oAKey;
         private string _serialNumber;
         private string _state;
@@ -17,6 +18,7 @@ namespace EXOKeyCheck
         private DateTime? _dateBound;
 
         public int ReportID { get => _reportID; set => _reportID = value; }
+        public string ProductKeyCode { get => _productKeyCode; set => _productKeyCode = value; }
         public string OAKey { get => _oAKey; set => _oAKey = value; }
         public string SerialNumber { get => _serialNumber; set => _serialNumber = value; }
         public string State { get => _state; set => _state = value; }
