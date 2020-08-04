@@ -21,7 +21,7 @@ namespace EXOKeyCheck
             }
             catch(IndexOutOfRangeException)
             {
-                Console.WriteLine("Argumento(s) invalido(s)");
+                Console.WriteLine("Argumento(ss) invalido(s)");
             }
             catch (Exception e)
             {
