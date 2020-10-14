@@ -14,18 +14,18 @@ namespace EXOKeyCheck
             {
                 var option = args[0];
                 if (option == "/?") { ShowHelp(); }
-                var productkeycode = args[1].ToUpper();
-                var key = args[2].ToUpper();
-                var serialNumber = args[3].ToUpper();
-                SelectQuery(option, productkeycode, key, serialNumber);
+                //var productkeycode = args[1].ToUpper();
+                var key = args[1].ToUpper();
+                var serialNumber = args[2].ToUpper();
+                SelectQuery(option, key, serialNumber);
             }
             catch(IndexOutOfRangeException)
             {
-                Console.WriteLine("Argumento(ss) invalido(s)");
+                //Console.Writeline("Argumento(s) invalido(s)");
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                //Console.Writeline(e.Message);
             }
             finally
             {
@@ -33,7 +33,7 @@ namespace EXOKeyCheck
             }
         }
 
-        private static void SelectQuery(string option, string productkeycode, string key, string serialNumber)
+        private static void SelectQuery(string option, string key, string serialNumber)
         {
             Regex regexKey = new Regex(@"^([A-Za-z0-9]{5}-){4}[A-Za-z0-9]{5}$");
             if (!regexKey.IsMatch(key))
@@ -50,7 +50,7 @@ namespace EXOKeyCheck
             switch (option)
             {
                 case "/sk":
-                    TrySaveKey(productkeycode, key, serialNumber);
+                    TrySaveKey(key, serialNumber);
                     break;
                 case "/hk":
                     TryHashKey(key, serialNumber);
@@ -60,9 +60,9 @@ namespace EXOKeyCheck
             }
         }
 
-        private static void TrySaveKey(string productkeycode, string key, string serialNumber)
+        private static void TrySaveKey(string key, string serialNumber)
         {
-            ExecuteSaveQuery(productkeycode, key, serialNumber);
+            ExecuteSaveQuery(key, serialNumber);
         }
 
         private static void TryHashKey(string key, string serialNumber)
@@ -71,13 +71,13 @@ namespace EXOKeyCheck
 
             if (string.IsNullOrWhiteSpace(report.OAKey))
             {
-                Console.WriteLine("No se encontró la clave en la base de datos.");
+                //Console.Writeline("No se encontró la clave en la base de datos.");
                 Environment.Exit(-6);
             }
 
             if (report.State == "Bound")
             {
-                Console.WriteLine("La clave ya está hasheada con el serial: " + report.SerialNumber);
+                //Console.Writeline("La clave ya está hasheada con el serial: " + report.SerialNumber);
                 Environment.Exit(-9);
             }
 
@@ -87,7 +87,7 @@ namespace EXOKeyCheck
             }
             else
             {
-                Console.WriteLine("La clave no coincide con el numero de serie en la base de datos.");
+                //Console.Writeline("La clave no coincide con el numero de serie en la base de datos.");
                 Environment.Exit(-4);
             }
 
@@ -122,7 +122,7 @@ namespace EXOKeyCheck
                 {
                     if (e.Message.Contains("network-related"))
                     {
-                        Console.WriteLine("Error en la red intentando guardar registro." + Environment.NewLine + e.Message);
+                        //Console.Writeline("Error en la red intentando guardar registro." + Environment.NewLine + e.Message);
                         Environment.Exit(-8);
                     }
 
@@ -175,7 +175,7 @@ namespace EXOKeyCheck
                 }
                 catch (Exception e )
                 {
-                    Console.WriteLine("Error intentando obtener registro." + e.Message);
+                    //Console.Writeline("Error intentando obtener registro." + e.Message);
                 }
                 finally
                 {
@@ -188,11 +188,11 @@ namespace EXOKeyCheck
 
         }
 
-        private static void ExecuteSaveQuery(string productkeycode, string key, string serialNumber)
+        private static void ExecuteSaveQuery(string key, string serialNumber)
         {
-            //var connectionString = @"data source=BUBBA;initial catalog=EXOOAKeys2020;persist security info=True;user id=BUBBASQL;password=12345678;MultipleActiveResultSets=True;";
+            var connectionString = @"data source=BUBBA;initial catalog=EXOOAKeys2020;persist security info=True;user id=BUBBASQL;password=12345678;MultipleActiveResultSets=True;";
             //var connectionString = @"data source=VM-FORREST;initial catalog=EXOOAKeys2020;persist security info=True;user id=BUBBASQL;password=12345678;MultipleActiveResultSets=True";
-            var connectionString = @"data source=DESKTOP;initial catalog=EXOOAKeys2020; integrated security=True; MultipleActiveResultSets=True";
+            //var connectionString = @"data source=DESKTOP;initial catalog=EXOOAKeys2020; integrated security=True; MultipleActiveResultSets=True";
             var sqlConnection = new SqlConnection(connectionString);
             using (sqlConnection)
             {
@@ -203,7 +203,7 @@ namespace EXOKeyCheck
                     {
                         CommandType = CommandType.StoredProcedure
                     };
-                    sqlCommand.Parameters.AddWithValue("@ProductKeyCode", productkeycode);
+                    //sqlCommand.Parameters.AddWithValue("@ProductKeyCode", productkeycode);
                     sqlCommand.Parameters.AddWithValue("@OAKey", key);
                     sqlCommand.Parameters.AddWithValue("@SerialNumber", serialNumber);
                     sqlCommand.Parameters.Add("@Output", SqlDbType.Char, 500);
@@ -229,10 +229,10 @@ namespace EXOKeyCheck
                 {
                     if (e.Message.Contains("network-related"))
                     {
-                        Console.WriteLine("Error en la red intentando guardar registro." + Environment.NewLine + e.Message);
+                        //Console.Writeline("Error en la red intentando guardar registro." + Environment.NewLine + e.Message);
                         Environment.Exit(-8);
                     }
-                    Console.WriteLine("Error intentando guardar registro." + Environment.NewLine + e.Message);
+                    //Console.Writeline("Error intentando guardar registro." + Environment.NewLine + e.Message);
                 }
                 finally
                 {
@@ -243,25 +243,25 @@ namespace EXOKeyCheck
 
         private static void ShowHelp()
         {
-            Console.WriteLine("");
-            Console.WriteLine(" EXOOACheck /[ sk | hk ] {OAKey SerialNumber}");
-            Console.WriteLine("");
-            Console.WriteLine("     /sk {OAKey SerialNumber}: Crea un nuevo registro en la base de datos.");
-            Console.WriteLine("     /hk {OAKey SerialNumber}: Coloca a la clave como 'Hasheada'.");
-            Console.WriteLine("");
-            Console.WriteLine(" Códigos de salida:");
-            Console.WriteLine("");
-            Console.WriteLine("      0 = OK");
-            Console.WriteLine("     -1 = ERROR en aplicación.");
-            Console.WriteLine("     -2 = OA KEY existente en base de datos.");
-            Console.WriteLine("     -3 = SERIAL NUMBER existente en base de datos.");
-            Console.WriteLine("     -4 = OA KEY no coincide con SERIAL NUMBER en base de datos.");
-            Console.WriteLine("     -5 = OA KEY y SERIAL NUMBER existentes en base de datos.");
-            Console.WriteLine("     -6 = OA KEY inexistente en base de datos");
-            Console.WriteLine("     -7 = SERIAL NUMBER inexistente en base de datos");
-            Console.WriteLine("     -8 = ERROR DE RED intentando conectarse a la base de datos");
-            Console.WriteLine("     -9 = OA KEY ya se encuentra hasheado con anterioridad");
-            Console.WriteLine("     -13 = OA KEY y SERIAL NUMBER inexistentes en base de datos");
+            //Console.Writeline("");
+            //Console.Writeline(" EXOOACheck /[ sk | hk ] {OAKey SerialNumber}");
+            //Console.Writeline("");
+            //Console.Writeline("     /sk {OAKey SerialNumber}: Crea un nuevo registro en la base de datos.");
+            //Console.Writeline("     /hk {OAKey SerialNumber}: Coloca a la clave como 'Hasheada'.");
+            //Console.Writeline("");
+            //Console.Writeline(" Códigos de salida:");
+            //Console.Writeline("");
+            //Console.Writeline("      0 = OK");
+            //Console.Writeline("     -1 = ERROR en aplicación.");
+            //Console.Writeline("     -2 = OA KEY existente en base de datos.");
+            //Console.Writeline("     -3 = SERIAL NUMBER existente en base de datos.");
+            //Console.Writeline("     -4 = OA KEY no coincide con SERIAL NUMBER en base de datos.");
+            //Console.Writeline("     -5 = OA KEY y SERIAL NUMBER existentes en base de datos.");
+            //Console.Writeline("     -6 = OA KEY inexistente en base de datos");
+            //Console.Writeline("     -7 = SERIAL NUMBER inexistente en base de datos");
+            //Console.Writeline("     -8 = ERROR DE RED intentando conectarse a la base de datos");
+            //Console.Writeline("     -9 = OA KEY ya se encuentra hasheado con anterioridad");
+            //Console.Writeline("     -13 = OA KEY y SERIAL NUMBER inexistentes en base de datos");
 
             Environment.Exit(0);
         }
