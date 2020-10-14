@@ -6,6 +6,8 @@ using System.Text.RegularExpressions;
 
 namespace EXOKeyCheck
 {
+
+    //TODO: purgar, pasar a ProductKey y usar el nuevo branch
     class Program
     {
         static void Main(string[] args)
