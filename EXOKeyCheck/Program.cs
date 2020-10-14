@@ -6,6 +6,18 @@ using System.Text.RegularExpressions;
 
 namespace EXOKeyCheck
 {
+    /// <summary>
+    //<Key>
+    //  <ProductKey>NFX7C-HRFRM-J6VJK-FDHG3-VXMMP</ProductKey>
+    //  <ProductKeyID>3273088776052</ProductKeyID>
+    //  <ProductKeyState>2</ProductKeyState>
+    //  <ProductKeyPartNumber>KU9-00001</ProductKeyPartNumber>
+    //</Key>
+    //var productKey = args[1].ToUpper();
+    //var serialNumber = args[2].ToUpper();
+    //var productKeyID = args[3];
+    //var productKeyPartNumber = args[4].ToUpper();
+    /// </summary>
 
     //TODO: purgar, pasar a ProductKey y usar el nuevo branch
     class Program
@@ -14,25 +26,84 @@ namespace EXOKeyCheck
         {
             try
             {
-                var option = args[0];
-                if (option == "/?") { ShowHelp(); }
-                //var productkeycode = args[1].ToUpper();
-                var key = args[1].ToUpper();
-                var serialNumber = args[2].ToUpper();
-                SelectQuery(option, key, serialNumber);
-            }
-            catch(IndexOutOfRangeException)
-            {
-                //Console.Writeline("Argumento(s) invalido(s)");
+                switch (args[0])
+                {
+                    case "/?":
+                        ShowHelp();
+                        break;
+                    case "/sk":
+                        if (ArgsValidation(args))
+                        {
+                            SaveKeyToDatabase(args[1], args[2], args[3], args[4]);
+                        }
+                        break;
+                    case "/hk":
+                        if (ArgsValidation(args))
+                        {
+                            SetBoundState(args[1], args[2]);
+                        }
+                        break;
+                    default:
+                        Environment.Exit(-1);
+                        break;
+                }
             }
             catch (Exception e)
             {
-                //Console.Writeline(e.Message);
-            }
-            finally
-            {
+                Console.WriteLine(e.Message);
                 Environment.Exit(-1);
             }
+        }
+
+        private static bool ArgsValidation(string[] args)
+        {
+            if (args.Length < 4) return false;
+
+            foreach (var arg in args)
+            {
+                if (string.IsNullOrWhiteSpace(arg)) return false;
+            }
+
+            var productKey = args[1].ToUpper();
+            var serialNumber = args[2].ToUpper();
+            var productKeyID = args[3];
+            var productKeyPartNumber = args[4].ToUpper();
+
+            Regex regexForProductKey = new Regex(@"^([A-Za-z0-9]{5}-){4}[A-Za-z0-9]{5}$");
+            if (!regexForProductKey.IsMatch(productKey))
+            {
+                throw new ArgumentException("Error: ProductKey inválido [1]");
+            }
+
+            Regex regexForSerialNumber = new Regex(@"^\d{7}[a-gA-G]\d{5}$");
+            if (!regexForSerialNumber.IsMatch(serialNumber))
+            {
+                throw new ArgumentException("Error: SerialNumber inválido [2]");
+            }
+
+            Regex regexForProductKeyID = new Regex(@"^[0-9]+$"); ///
+            if (!regexForProductKeyID.IsMatch(productKeyID))
+            {
+                throw new ArgumentException("Error: ProductKeyID inválido [3]");
+            }
+
+            Regex regexForProductKeyPartNumber = new Regex(@"^([A-Za-z0-9]{3}-)[0-9]{5}$"); ///
+            if (!regexForProductKeyPartNumber.IsMatch(productKeyPartNumber))
+            {
+                throw new ArgumentException("Error: ProductKeyPartNumber inválido [4]");
+            }
+
+            return true;
+        }
+
+        private static void SetBoundState(string v1, string v2)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static void SaveKeyToDatabase(string productKey, string serialNumber, string productKeyID, string productKeyPartNumber)
+        {
+            throw new NotImplementedException();
         }
 
         private static void SelectQuery(string option, string key, string serialNumber)
@@ -73,13 +144,13 @@ namespace EXOKeyCheck
 
             if (string.IsNullOrWhiteSpace(report.OAKey))
             {
-                //Console.Writeline("No se encontró la clave en la base de datos.");
+                //Console.WriteLine("No se encontró la clave en la base de datos.");
                 Environment.Exit(-6);
             }
 
             if (report.State == "Bound")
             {
-                //Console.Writeline("La clave ya está hasheada con el serial: " + report.SerialNumber);
+                //Console.WriteLine("La clave ya está hasheada con el serial: " + report.SerialNumber);
                 Environment.Exit(-9);
             }
 
@@ -89,7 +160,7 @@ namespace EXOKeyCheck
             }
             else
             {
-                //Console.Writeline("La clave no coincide con el numero de serie en la base de datos.");
+                //Console.WriteLine("La clave no coincide con el numero de serie en la base de datos.");
                 Environment.Exit(-4);
             }
 
@@ -124,7 +195,7 @@ namespace EXOKeyCheck
                 {
                     if (e.Message.Contains("network-related"))
                     {
-                        //Console.Writeline("Error en la red intentando guardar registro." + Environment.NewLine + e.Message);
+                        //Console.WriteLine("Error en la red intentando guardar registro." + Environment.NewLine + e.Message);
                         Environment.Exit(-8);
                     }
 
@@ -135,7 +206,7 @@ namespace EXOKeyCheck
                     sqlConnection.Close();
                 }
             }
-             
+
         }
 
         private static OAKeyReport ExecuteSelectFromKeyQuery(string key, string storedprocedure)
@@ -175,9 +246,9 @@ namespace EXOKeyCheck
                         report = reportEntity;
                     }
                 }
-                catch (Exception e )
+                catch (Exception e)
                 {
-                    //Console.Writeline("Error intentando obtener registro." + e.Message);
+                    //Console.WriteLine("Error intentando obtener registro." + e.Message);
                 }
                 finally
                 {
@@ -231,10 +302,10 @@ namespace EXOKeyCheck
                 {
                     if (e.Message.Contains("network-related"))
                     {
-                        //Console.Writeline("Error en la red intentando guardar registro." + Environment.NewLine + e.Message);
+                        //Console.WriteLine("Error en la red intentando guardar registro." + Environment.NewLine + e.Message);
                         Environment.Exit(-8);
                     }
-                    //Console.Writeline("Error intentando guardar registro." + Environment.NewLine + e.Message);
+                    //Console.WriteLine("Error intentando guardar registro." + Environment.NewLine + e.Message);
                 }
                 finally
                 {
@@ -245,25 +316,34 @@ namespace EXOKeyCheck
 
         private static void ShowHelp()
         {
-            //Console.Writeline("");
-            //Console.Writeline(" EXOOACheck /[ sk | hk ] {OAKey SerialNumber}");
-            //Console.Writeline("");
-            //Console.Writeline("     /sk {OAKey SerialNumber}: Crea un nuevo registro en la base de datos.");
-            //Console.Writeline("     /hk {OAKey SerialNumber}: Coloca a la clave como 'Hasheada'.");
-            //Console.Writeline("");
-            //Console.Writeline(" Códigos de salida:");
-            //Console.Writeline("");
-            //Console.Writeline("      0 = OK");
-            //Console.Writeline("     -1 = ERROR en aplicación.");
-            //Console.Writeline("     -2 = OA KEY existente en base de datos.");
-            //Console.Writeline("     -3 = SERIAL NUMBER existente en base de datos.");
-            //Console.Writeline("     -4 = OA KEY no coincide con SERIAL NUMBER en base de datos.");
-            //Console.Writeline("     -5 = OA KEY y SERIAL NUMBER existentes en base de datos.");
-            //Console.Writeline("     -6 = OA KEY inexistente en base de datos");
-            //Console.Writeline("     -7 = SERIAL NUMBER inexistente en base de datos");
-            //Console.Writeline("     -8 = ERROR DE RED intentando conectarse a la base de datos");
-            //Console.Writeline("     -9 = OA KEY ya se encuentra hasheado con anterioridad");
-            //Console.Writeline("     -13 = OA KEY y SERIAL NUMBER inexistentes en base de datos");
+            Console.WriteLine("Opciones de parámetros:");
+            Console.WriteLine("");
+            Console.WriteLine("      /sk { ProductKey SerialNumber [ProductKeyID ProductKeyPartNumber] }");
+            Console.WriteLine("      Crea un nuevo registro en la base de datos con estado 'Consumed'");
+            Console.WriteLine("");
+            Console.WriteLine("      /hk { ProductKey SerialNumber }");
+            Console.WriteLine("      Cambia el estado 'Consumed' de un registro a 'Bound'");
+            Console.WriteLine("");
+            Console.WriteLine(" Códigos de salida generales:");
+            Console.WriteLine("");
+            Console.WriteLine("      0  = Operación realizada sin errores.");
+            Console.WriteLine("     -1  = Error de ejecución de la aplicación.");
+            Console.WriteLine("     -8  = Error de conexión con la base de datos.");
+            Console.WriteLine("");
+            Console.WriteLine(" Códigos de salida para el parámetro '/sk':");
+            Console.WriteLine("");
+            Console.WriteLine("     -2  = ProductKey ya existe en base de datos.");
+            Console.WriteLine("     -3  = SerialNumber ya existe en base de datos.");
+            Console.WriteLine("     -5  = ProductKey y SerialNumber ya existen en base de datos.");
+            Console.WriteLine("");
+            Console.WriteLine(" Códigos de salida para el párametro '/hk':");
+            Console.WriteLine("");
+            Console.WriteLine("     -4  = ProductKey y SerialNumber existen en la base de datos, pero no estan asociados.");
+            Console.WriteLine("     -6  = No se encontró ProductKey en la base de datos.");
+            Console.WriteLine("     -7  = No se encontró SerialNumber en la base de datos.");
+            Console.WriteLine("     -9  = El el estado del registro en la base de datos es distinto de 'Consumed'.");
+            Console.WriteLine("     -13 = No se encontró ProductKey ni SerialNumber en la base de datos.");
+            Console.WriteLine("");
 
             Environment.Exit(0);
         }
