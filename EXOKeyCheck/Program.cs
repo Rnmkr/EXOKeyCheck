@@ -13,25 +13,31 @@ namespace EXOKeyCheck
     {
         static void Main(string[] args)
         {
+            if (args[0] == "/?") { ShowHelp(); }
+            if (args[0] == "/??") { ShowExitCodes(); }
+
             try
             {
-                args[1] = args[1].ToUpper();
-                args[2] = args[2].ToUpper();
-                args[4] = args[5].ToUpper();
-
+                        ArgsToUpper(args);
                 switch (args[0])
                 {
-                    case "/?":
-                        ShowHelp();
-                        break;
                     case "/sk":
-                        SaveKeyToDatabase(args);
+                        SaveKey(args);
                         break;
-                    case "/hk":
-                        SetBoundState(args);
+                    case "/sh":
+                        SaveHash(args);
+                        break;
+                    case "/sb":
+                        SetBound(args);
+                        break;
+                    case "/skf":
+                        SaveKeyFromFile(args);
+                        break;
+                    case "/shf":
+                        SaveHashFromFile(args);
                         break;
                     default:
-                        Console.WriteLine("Error: Opción inválida." + Environment.NewLine + "Utilice '/?' para ver la ayuda.");
+                        Console.WriteLine("Error: Opción inválida." + Environment.NewLine + "Utilice '/?' para ver la ayuda." + Environment.NewLine + "Utilice '/??' para ver los parámetros de salida.");
                         Environment.Exit(-1);
                         break;
                 }
@@ -43,7 +49,7 @@ namespace EXOKeyCheck
             }
             catch (IndexOutOfRangeException)
             {
-                Console.WriteLine("Error: la cantidad de parámetros es inválida." + Environment.NewLine + "Utilice '/?' para ver la ayuda.");
+                Console.WriteLine("Error: Parámetros incompletos." + Environment.NewLine + "Utilice '/?' para ver la ayuda." + Environment.NewLine + "Utilice '/??' para ver los parámetros de salida.");
                 Environment.Exit(-1);
             }
             catch (Exception e)
@@ -53,7 +59,29 @@ namespace EXOKeyCheck
             }
         }
 
-        private static void SaveKeyToDatabase(string[] args)
+        private static void SaveHashFromFile(string[] args)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static void SaveKeyFromFile(string[] args)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static void SaveHash(string[] args)
+        {
+            throw new NotImplementedException();
+        }
+
+        private static void ArgsToUpper(string[] args)
+        {
+            args[1] = args[1].ToUpper();
+            args[2] = args[2].ToUpper();
+            args[4] = args[4].ToUpper();
+        }
+
+        private static void SaveKey(string[] args)
         {
             if (IsArgsValid(args))
             {
@@ -61,7 +89,7 @@ namespace EXOKeyCheck
             }
         }
 
-        private static void SetBoundState(string[] args)
+        private static void SetBound(string[] args)
         {
             if (IsArgsValid(args))
                 throw new NotImplementedException();
@@ -93,6 +121,7 @@ namespace EXOKeyCheck
                     sqlCommand.Parameters.AddWithValue("@ProductKeyID", productKeyID);
                     sqlCommand.Parameters.AddWithValue("@ProductKeyState", productKeyState);
                     sqlCommand.Parameters.AddWithValue("@ProductKeyPartNumber", productKeyPartNumber);
+                    sqlCommand.Parameters.AddWithValue("@Source", productKeyPartNumber);
                     sqlCommand.Parameters.Add("@Output", SqlDbType.Char, 500);
                     sqlCommand.Parameters["@Output"].Direction = ParameterDirection.Output;
                     sqlCommand.ExecuteNonQuery();
@@ -133,14 +162,13 @@ namespace EXOKeyCheck
                 if (string.IsNullOrWhiteSpace(arg))
                     throw new ArgumentNullException();
 
-            Regex regexForProductKey = new Regex(@"^([A-Za-z0-9]{5}-){4}[A-Za-z0-9]{5}$");
-            if (!regexForProductKey.IsMatch(args[1]))
-                throw new ArgumentException("Error: El parámetro (1) ProductKey es inválido.");
-
-
             Regex regexForSerialNumber = new Regex(@"^\d{7}[a-gA-G]\d{5}$");
-            if (!regexForSerialNumber.IsMatch(args[2]))
-                throw new ArgumentException("Error: El parámetro (2) SerialNumber es inválido.");
+            if (!regexForSerialNumber.IsMatch(args[1]))
+                throw new ArgumentException("Error: El parámetro (1) SerialNumber es inválido.");
+
+            Regex regexForProductKey = new Regex(@"^([A-Za-z0-9]{5}-){4}[A-Za-z0-9]{5}$");
+            if (!regexForProductKey.IsMatch(args[2]))
+                throw new ArgumentException("Error: El parámetro (2) ProductKey es inválido.");
 
 
             Regex regexForProductKeyID = new Regex(@"^[0-9]+$");
@@ -194,13 +222,13 @@ namespace EXOKeyCheck
         {
             var report = ExecuteSelectFromKeyQuery(key, "GetRecordFromKey");
 
-            if (string.IsNullOrWhiteSpace(report.OAKey))
+            if (string.IsNullOrWhiteSpace(report.ProductKey))
             {
                 //Console.WriteLine("No se encontró la clave en la base de datos.");
                 Environment.Exit(-6);
             }
 
-            if (report.State == "Bound")
+            if (report.ActivationState == "Bound")
             {
                 //Console.WriteLine("La clave ya está hasheada con el serial: " + report.SerialNumber);
                 Environment.Exit(-9);
@@ -259,7 +287,7 @@ namespace EXOKeyCheck
 
         }
 
-        private static OAKeyReport ExecuteSelectFromKeyQuery(string key, string storedprocedure)
+        private static OAReport ExecuteSelectFromKeyQuery(string key, string storedprocedure)
         {
             var connectionString = @"data source=BUBBA;initial catalog=EXOOAKeys2020;persist security info=True;user id=BUBBASQL;password=12345678;MultipleActiveResultSets=True;";
             //var connectionString = @"data source=VM-FORREST;initial catalog=EXOOAKeys2020;persist security info=True;user id=BUBBASQL;password=12345678;MultipleActiveResultSets=True";
@@ -268,7 +296,7 @@ namespace EXOKeyCheck
             using (sqlConnection)
             {
                 IDataReader reader = null;
-                var report = new OAKeyReport();
+                var report = new OAReport();
                 try
                 {
                     sqlConnection.Open();
@@ -281,12 +309,12 @@ namespace EXOKeyCheck
 
                     while (reader.Read())
                     {
-                        var reportEntity = new OAKeyReport()
+                        var reportEntity = new OAReport()
                         {
                             ReportID = (int)reader["ReportID"],
-                            OAKey = (string)reader["OAKey"],
+                            ProductKey = (string)reader["OAKey"],
                             SerialNumber = (string)reader["SerialNumber"],
-                            State = (string)reader["State"],
+                            ActivationState = (string)reader["State"],
                             DateConsumed = (DateTime)reader["DateConsumed"],
                         };
 
@@ -298,7 +326,7 @@ namespace EXOKeyCheck
                 }
                 catch (Exception e)
                 {
-                    //Console.WriteLine("Error intentando obtener registro." + e.Message);
+                    Console.WriteLine("Error intentando obtener registro." + e.Message);
                 }
                 finally
                 {
@@ -318,27 +346,34 @@ namespace EXOKeyCheck
             Console.WriteLine("");
             Console.WriteLine(" Opciones:");
             Console.WriteLine("");
-            //Console.WriteLine("      /sk { SerialNumber ProductKey ProductKeyID ProductKeyState ProductKeyPartNumber }");
-            //Console.WriteLine("      Crea un nuevo registro en la base de datos con estado 'Consumed'");
-            //Console.WriteLine("");
-            //Console.WriteLine("      /hk { SerialNumber ProductKey }");
-            //Console.WriteLine("      Cambia el estado de un registro de 'Consumed' a 'Bound'");
-            //Console.WriteLine("");
-            Console.WriteLine("      /SaveAssembledFile {Ruta al archivo XML} [Origen]");
-            Console.WriteLine("      Crea un nuevo registro en la base de datos con estado 'Consumed' a partir del archivo OA3.xml dado.");
-            Console.WriteLine("      El parámetro 'Origen' es opcional. Si no se especifíca se asigna el valor 'N/A'. Máximo 10 caracteres.");
+            Console.WriteLine("      /sk {SerialNumber} {ProductKey} {ProductKeyID} {ProductKeyPartNumber} [Origen]");
+            Console.WriteLine("      Crea un nuevo registro en la base de datos con estado 'Consumed'");
+            Console.WriteLine("      El parámetro 'Origen' es opcional. Si no se especifíca se asigna el valor 'N/A'. (Máx. 20 chars).");
             Console.WriteLine("");
-            Console.WriteLine("      /SetAsBound { SerialNumber ProductKey }");
-            Console.WriteLine("      Cambia el estado de un registro de 'Consumed' a 'Bound' si ambos valores estan asociados en la base de datos.");
+            Console.WriteLine("      /sh {SerialNumber} {ProductKey} {HardwareHash}");
+            Console.WriteLine("      Guarda el Hardware Hash y cambia el estado del registro de 'Consumed' a 'Bound'.");
             Console.WriteLine("");
-            Console.WriteLine("      /SaveReportedFile { SerialNumber ProductKey }");
-            Console.WriteLine("      Crea un nuevo registro en la base de datos del archivo OA3.xml reportado luego de crear el Hardware Hash.");
+            Console.WriteLine("      /sb {SerialNumber} {ProductKey}");
+            Console.WriteLine("      Cambia el estado del registro de 'Consumed' a 'Bound'.");
             Console.WriteLine("");
+            Console.WriteLine("      /skf {SerialNumber} {Ruta al archivo XML} [Origen]");
+            Console.WriteLine("      Identico al parámetro '/sk' pero proporcionando la ruta a un archivo XML.");
+            Console.WriteLine("");
+            Console.WriteLine("      /shf {SerialNumber} {Ruta al archivo XML}");
+            Console.WriteLine("      Identico al parámetro '/sh' pero proporcionando la ruta a un archivo XML.");
             Console.WriteLine("");
             Console.WriteLine(" Ejemplos:");
-            Console.WriteLine(@"      EXOKeyCheck /SaveAssembledFile C:\OA3\OA3.xml Microsoft");
-            Console.WriteLine(@"      EXOKeyCheck /SetAsBound C:\OA3\OA3.xml");
-            Console.WriteLine(@"      EXOKeyCheck /SaveReportedFile C:\OA3\OA3.xml");
+            Console.WriteLine(@"      EXOKeyCheck /sk 1234567A00001 W4YPB-2XN63-6D6CH-YQG3R-X2BDY 1600000000545 FCQ-00001 'EXO Prod.'");
+            Console.WriteLine(@"      EXOKeyCheck /sh 1234567A00001 W4YPB-2XN63-6D6CH-YQG3R-X2BDY T0GDAgEAHAAAAAoADwCrPwAACgCRALpHq0gcJ3gC...");
+            Console.WriteLine(@"      EXOKeyCheck /sb 1234567A00001 W4YPB-2XN63-6D6CH-YQG3R-X2BDY");
+            Console.WriteLine(@"      EXOKeyCheck /skf 1234567A00001 'C:\OA3\OA3-PreHash.xml' 'China'");
+            Console.WriteLine(@"      EXOKeyCheck /shf 1234567A00001 W4YPB-2XN63-6D6CH-YQG3R-X2BDY 'C:\OA3\OA3-PostHash.xml'");
+
+            Environment.Exit(0);
+        }
+
+        private static void ShowExitCodes()
+        {
             Console.WriteLine("");
             Console.WriteLine(" Códigos de salida generales:");
             Console.WriteLine("");
@@ -360,8 +395,6 @@ namespace EXOKeyCheck
             Console.WriteLine("     -9  = El el estado del registro en la base de datos es distinto de 'Consumed'.");
             Console.WriteLine("     -13 = No se encontró ProductKey ni SerialNumber en la base de datos.");
             Console.WriteLine("");
-
-            Environment.Exit(0);
         }
     }
 }
